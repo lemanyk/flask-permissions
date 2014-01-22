@@ -46,6 +46,7 @@ class Role(db.Model):
                 db.session.add(existing_ability)
                 db.session.commit()
             self.abilities.append(existing_ability)
+            db.session.commit()
 
     def remove_abilities(self, *abilities):
         for ability in abilities:
@@ -124,6 +125,21 @@ class UserMixin(db.Model):
     def is_anonymous(self):
         return False
 
+    def _abilities(self):
+        return Ability.query.join(Ability.roles).join(Role.users) \
+            .filter_by(id=self.id)
+
+    @property
+    def abilities(self):
+        return self._abilities().all()
+
+    def has_ability(self, abilities):
+        """return true if user has at least one ability"""
+        if isinstance(abilities, basestring):
+            abilities = [abilities]
+        return bool(self._abilities().filter(
+            Ability.name.in_(abilities)).all())
+
     def add_roles(self, *roles):
         for role in roles:
             existing_role = Role.query.filter_by(name=role).first()
@@ -132,6 +148,7 @@ class UserMixin(db.Model):
                 db.session.add(existing_role)
                 db.session.commit()
             self.roles.append(existing_role)
+            db.session.commit()
 
     def remove_roles(self, *roles):
         for role in roles:
