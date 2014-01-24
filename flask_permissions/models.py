@@ -90,7 +90,8 @@ class UserMixin(db.Model):
     roles = db.relationship(
         'Role', secondary=user_role_table, backref='users')
 
-    def __init__(self, roles=None, default_role='user'):
+    def __init__(self, roles=None, default_role='user', **kwargs):
+        super(UserMixin, self).__init__(**kwargs)
         # If only a string is passed for roles, convert it to a list containing
         # that string
         if roles and isinstance(roles, basestring):
